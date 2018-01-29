@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<forms:ContentPage
+	xmlns:forms="clr-namespace:Xamarin.Forms;assembly=Xamarin.Forms.Core"
+	xmlns="http://xamarin.com/schemas/2014/forms"
+	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+	xmlns:local="clr-namespace:XamarinWPF"
+	x:Class="XamarinWPF.MainPage"
+	>
+	<Grid>
+		<Grid.BindingContext>
+			<local:ViewModels.MainPageViewModel/>
+		</Grid.BindingContext>
+
+		<Grid.RowDefinitions>
+			<RowDefinition Height="50"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+		
+		<StackLayout
+			Grid.Row="0"
+			HorizontalOptions="CenterAndExpand"
+			VerticalOptions="Start"
+			Spacing="10"
+			Padding="20"
+			>
+
+			<forms:Button 
+				Text="Admin Operation"
+				Command="{Binding AdminCommand}"
+				HorizontalOptions="CenterAndExpand"
+				BorderWidth="1"
+				WidthRequest="150"
+				/>
+			
+		</StackLayout>
+		
+		<StackLayout
+			Grid.Row="1"
+			HorizontalOptions="CenterAndExpand"
+			VerticalOptions="End"
+			Spacing="10"
+			Padding="20"
+			>
+		
+			<forms:StackLayout Orientation="Horizontal">
+				<forms:Label Text="Release Build" VerticalOptions="Center"/>
+				<forms:Switch IsToggled="{Binding IsReleaseBuild}"/>
+			</forms:StackLayout>
+
+			<forms:StackLayout Orientation="Horizontal">
+				<forms:Label Text="ReleaseVer" VerticalOptions="Center"/>
+				<forms:Picker Title="picker"
+					ItemsSource="{Binding ReleaseVerList}"
+					ItemDisplayBinding="{Binding Name}"
+					SelectedItem="{Binding SelectedReleaseVersion}"
+					/>
+			</forms:StackLayout>
+
+			<forms:StackLayout Orientation="Horizontal">
+				<forms:Label Text="Real Store" VerticalOptions="Center"/>
+				<forms:Switch IsToggled="{Binding IsRealStore}"/>
+			</forms:StackLayout>
+		
+			<forms:StackLayout Orientation="Horizontal">
+				<forms:Label Text="Clean Build" VerticalOptions="Center"/>
+				<forms:Switch IsToggled="{Binding IsCleanBuild}"/>
+			</forms:StackLayout>
+
+			<forms:StackLayout Orientation="Horizontal" HorizontalOptions="CenterAndExpand">
+				<forms:Button 
+					Text="iOS Build"
+					Command="{Binding BuildIOSCommand}"
+					HorizontalOptions="CenterAndExpand"
+					BorderWidth="1"
+					WidthRequest="150"
+					/>
+				<forms:Button
+					Text="Android Build"
+					Command="{Binding BuildAndroidCommand}"
+					HorizontalOptions="CenterAndExpand"
+					BorderWidth="1"
+					WidthRequest="150"
+					/>
+			</forms:StackLayout>
+
+			<forms:StackLayout Orientation="Horizontal" HorizontalOptions="StartAndExpand">
+				<forms:Label Text="[Status]"/>
+				<forms:Label Text="{Binding StatusLine}"/>
+			</forms:StackLayout>
+		</StackLayout>
+	</Grid>
+
+</forms:ContentPage>
