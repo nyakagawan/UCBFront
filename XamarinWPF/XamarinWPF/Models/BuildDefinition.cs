@@ -59,8 +59,8 @@ public class BuildDefinition
 						{
 							buildOptions = new List<string>
 							{
-								"BuildOptions.Development",
-								"BuildOptions.AllowDebugging",
+								"Development",
+								"AllowDebugging",
 							};
 						}
 
@@ -126,7 +126,9 @@ public class BuildDefinition
 
 		foreach (var symbol in node.Value.symbols)
 		{
-			symbolList.Add(symbol);
+			var symbols = symbol.Trim(' ', ';').Split(';');
+			int addSymbolNum = symbols.Count();
+			symbolList.AddRange(symbols);
 
 			if (node.Next != null)
 			{
@@ -137,7 +139,7 @@ public class BuildDefinition
 				onMakeOpt(symbolList);
 			}
 
-			symbolList.RemoveAt(symbolList.Count - 1);
+			symbolList.RemoveRange(symbolList.Count - addSymbolNum, addSymbolNum);
 		}
 	}
 
