@@ -108,7 +108,10 @@ namespace XamarinWPF.ViewModels
 				{
 					Debug.WriteLine("Admin Operation");
 					StatusLine = "Start Admin Operation";
+					_NowBuilding = true;
 					await Models.UCBApi.RunAdminOperation();
+					_NowBuilding = false;
+					RefreshCanExecutes();
 					StatusLine = "Finish";
 				},
 				canExecute: (parameter_) =>

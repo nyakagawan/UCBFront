@@ -23,6 +23,30 @@ namespace XamarinWPF.Models
 			config = new Configuration(client, accessToken: ApiKey);
 		}
 
+		static async Task<T> ConsideringRateLimitWith<T>(System.Func<Task<T>> act)
+		{
+			T result;
+			while (true)
+			{
+				try
+				{
+					result = await act();
+				}
+				catch (ApiException ex)
+				{
+					if (ex.ErrorCode == 429)
+					{
+						Debug.WriteLine("Rate Limiting. " + (string)ex.ErrorContent);
+						await Task.Delay(3000);
+						continue;
+					}
+					throw ex;
+				}
+				break;
+			}
+			return result;
+		}
+
 		public static async Task RunAdminOperation()
 		{
 			var optionList = BuildDefinition.MakeBuildTargetAPIOptions();
@@ -49,13 +73,19 @@ namespace XamarinWPF.Models
 			var buildTargetsApi = new UnityCloudBuildApi.IO.Swagger.Api.BuildtargetsApi(config);
 
 			// Get BuildTargets for list BuildTargetId
-			var buildTargets = await buildTargetsApi.GetBuildTargetsAsync(OrgId, ProjectId);
+			var buildTargets = await ConsideringRateLimitWith(async () => await buildTargetsApi.GetBuildTargetsAsync(OrgId, ProjectId));
 
-			foreach (var buildTarget in buildTargets)
+			for (int i = 0; i < buildTargets.Count;)
 			{
-				if (buildTarget.Name.IndexOf(BuildDefinition.NamePrefix) != 0) continue;
-				Debug.WriteLine("Delete build target: " + buildTarget.Name);
-				await buildTargetsApi.DeleteBuildTargetAsync(OrgId, ProjectId, buildTarget.Buildtargetid);
+				var buildTarget = buildTargets[i];
+				if (buildTarget.Name.IndexOf(BuildDefinition.NamePrefix) >= 0)
+				{
+					Debug.WriteLine("Delete build target: " + buildTarget.Name);
+					await ConsideringRateLimitWith(
+						async () => await buildTargetsApi.DeleteBuildTargetAsync(OrgId, ProjectId, buildTarget.Buildtargetid)
+						);
+				}
+				i++;
 			}
 		}
 
@@ -64,30 +94,32 @@ namespace XamarinWPF.Models
 			var buildTargetsApi = new UnityCloudBuildApi.IO.Swagger.Api.BuildtargetsApi(config);
 
 			// Get BuildTargets for list BuildTargetId
-			var buildTargets = await buildTargetsApi.GetBuildTargetsAsync(OrgId, ProjectId);
+			var buildTargets = await ConsideringRateLimitWith(async () => await buildTargetsApi.GetBuildTargetsAsync(OrgId, ProjectId));
 			var existsTargetIdByName = buildTargets.ToDictionary(x => x.Name);
 
-			foreach (var opt2 in optionList)
+			for (int i = 0; i < optionList.Count;)
 			{
+				var opt2 = optionList[i];
 				if (existsTargetIdByName.ContainsKey(opt2.Name))
 				{
 					//Update build target
-					Debug.WriteLine("Update build target: " + opt2.Name);
 					var target = existsTargetIdByName[opt2.Name];
+					Debug.WriteLine("Update build target: " + opt2.Name + ", " + target.Buildtargetid);
 					var opt3 = new Options3();
 					opt3.Name = opt2.Name;
 					opt3.Platform = opt2.Platform;
 					opt3.Enabled = opt2.Enabled;
 					opt3.Settings = opt2.Settings;
 					opt3.Credentials = opt2.Credentials;
-					var updateBuildTarget = await buildTargetsApi.UpdateBuildTargetAsync(OrgId, ProjectId, target.Buildtargetid, opt3);
+					await ConsideringRateLimitWith(async () => await buildTargetsApi.UpdateBuildTargetAsync(OrgId, ProjectId, target.Buildtargetid, opt3));
 				}
 				else
 				{
 					// Add Build Target
 					Debug.WriteLine("Add build target: " + opt2.Name);
-					var newBuildTarget = await buildTargetsApi.AddBuildTargetAsync(OrgId, ProjectId, opt2);
+					await ConsideringRateLimitWith(async () => await buildTargetsApi.AddBuildTargetAsync(OrgId, ProjectId, opt2));
 				}
+				i++;
 			}
 		}
 
